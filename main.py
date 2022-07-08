@@ -2,9 +2,12 @@ import wget
 import requests
 from bs4 import BeautifulSoup
 import argparse
+import os
+import re
 
 VERSION = "1.0"
 BASE_HREF = "https://mcversions.net/download/"
+
 def getDownloadHref(href):
     page = requests.get(href)
     soupObj = BeautifulSoup(page.content, "html.parser")
@@ -12,12 +15,26 @@ def getDownloadHref(href):
     href = res.get("href")
     return href
 
+
 def validateURL(href):
-    page = requests.get(href)
+    try: page = requests.get(href)
+    except:
+        return False
     if str(page) != "<Response [404]>":
         return True
     else:
         return False
+
+def validatePath(path):
+    if os.path.exists(path):
+        return True
+    else:
+        return False
+
+def validateOrExit(validator, message):
+    if not validator:
+        print(message)
+        exit()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download Server Jar File")
@@ -37,26 +54,23 @@ if __name__ == "__main__":
 
 
     if options.link:
+        validateOrExit(validateURL(options.link), "Link is invalid")
         if options.path:
+            validateOrExit(validatePath(options.path), "No such path")
             wget.download(options.link, options.path, bar = bar)
         else:
             wget.download(options.link, bar = bar)
 
     elif options.download:
-
         href = BASE_HREF + options.download
+        validateOrExit(validateURL(href), "No such version")
+        downHref = getDownloadHref(href)
 
-        if validateURL(href):
-
-            downHref = getDownloadHref(href)
-
-            if options.path:
-                wget.download(downHref, options.path, bar = bar)
-            else:
-                wget.download(downHref, bar = bar)
+        if options.path:
+            validateOrExit(validatePath(options.path), "No such path")
+            wget.download(downHref, options.path, bar = bar)
         else:
-            print("No such verison")
-            exit()
+            wget.download(downHref, bar = bar)
         
     else:
         print("No arguments provided! Exiting without action!")
