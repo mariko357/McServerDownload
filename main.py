@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import argparse
 import os
-
+import ServerDownloader
 
 VERSION = "Release 1.0"
 INDEX_HREF = "https://mcversions.net"
@@ -30,7 +30,7 @@ def getLatestDownloadHref():
     completeHref = INDEX_HREF + href
     return completeHref
 
-def listStable():
+def listStableLinkRaw():
     page = requests.get(INDEX_HREF)
     soupObj = BeautifulSoup(page.content, "html.parser")
     stable = soupObj.find("h5", text = "Stable Releases")
@@ -41,7 +41,7 @@ def listStable():
         links.append(i.get("href"))
     return links
 
-def listSnapshot():
+def listSnapshotLinkRaw():
     page = requests.get(INDEX_HREF)
     soupObj = BeautifulSoup(page.content, "html.parser")
     snapshot = soupObj.find("h5", text = "Snapshot Preview")
@@ -50,6 +50,22 @@ def listSnapshot():
     links = list()
     for i in elements:
         links.append(i.get("href"))
+    return links
+
+def listStableLink():
+    rawLinks = listStableLinkRaw()
+    links = list()
+    for i in rawLinks:
+        if getDownloadHref(INDEX_HREF + i) != None:
+            links.append(INDEX_HREF + i)
+    return links
+
+def listSnapshotLink():
+    rawLinks = listSnapshotLinkRaw()
+    links = list()
+    for i in rawLinks:
+        if getDownloadHref(INDEX_HREF + i) != None:
+            links.append(INDEX_HREF + i)
     return links
 
 def validateURL(href):
@@ -73,7 +89,9 @@ def validateOrExit(validator, message):
         exit()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Download Server Jar File")
+    inst = ServerDownloader()
+    
+    """parser = argparse.ArgumentParser(description="Download Server Jar File")
 
     parser.add_argument("--verison", "-v", action="version", version=VERSION, help="Programm Verison")
     parser.add_argument("--download", "-d", help="Download Specific Server Version", type = str)
@@ -81,6 +99,8 @@ if __name__ == "__main__":
     parser.add_argument("--path", "-p", help="Select download path", type = str)
     parser.add_argument("--latest", "-l", help="Download Latest Release Version", nargs = "?", const = "true", default = "false", type = str)
     parser.add_argument("--bar", "-b", help="Display download bar", nargs = "?", const = "true", default = "false", type = str)
+    parser.add_argument("--stable", help="Lists all", type = str)
+    parser.add_argument("--snapshot", help="Select download path", type = str)
 
     options, args = parser.parse_known_args()
 
@@ -120,12 +140,12 @@ if __name__ == "__main__":
             wget.download(downHref, bar = bar)
         
     else:
-        print("No arguments provided! Exiting without action")
-    """links = listSnapshot()
+        print("No arguments provided! Exiting without action")"""
+    links = listStableLink()
     total = len(links)
     j = 0
     for i in links:
         j += 1
         print(f"{j} Out Of {total}; ", end=" ")
-        print(i.removeprefix("/download/"), end = ": ")
-        print(getDownloadHref(INDEX_HREF + i))"""
+        print(i.removeprefix("https://mcversions.net/download/"), end = ": ")
+        print(i)
