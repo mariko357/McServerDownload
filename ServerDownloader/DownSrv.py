@@ -8,7 +8,10 @@ class ServerDownloader():
     INDEX_HREF = "https://mcversions.net"
     BASE_HREF = "https://mcversions.net/download/"
 
-    def getDownloadHref(self, href):
+    stableVersions = list()
+    snapshotVersions = list()
+
+    def getDownloadHref(self, href): # gets file download link from web page
         try:
             page = requests.get(href)
             soupObj = BeautifulSoup(page.content, "html.parser")
@@ -18,7 +21,7 @@ class ServerDownloader():
         except:
             return None
 
-    def getLatestDownloadHref(self):
+    def getLatestDownloadHref(self): #gets latest version page
         page = requests.get(self.INDEX_HREF)
         soupObj = BeautifulSoup(page.content, "html.parser")
         res = soupObj.find("span", text = "Latest Release")
@@ -29,7 +32,7 @@ class ServerDownloader():
         completeHref = self.INDEX_HREF + href
         return completeHref
 
-    def listStableLinkRaw(self):
+    def listStableLinkRaw(self): #gets all links to stable releases pages
         page = requests.get(self.INDEX_HREF)
         soupObj = BeautifulSoup(page.content, "html.parser")
         stable = soupObj.find("h5", text = "Stable Releases")
@@ -40,7 +43,7 @@ class ServerDownloader():
             links.append(i.get("href"))
         return links
 
-    def listSnapshotLinkRaw(self):
+    def listSnapshotLinkRaw(self): #Gets all links to snapshot version pages
         page = requests.get(self.INDEX_HREF)
         soupObj = BeautifulSoup(page.content, "html.parser")
         snapshot = soupObj.find("h5", text = "Snapshot Preview")
@@ -51,7 +54,7 @@ class ServerDownloader():
             links.append(i.get("href"))
         return links
 
-    def listStableLink(self):
+    def listStableLink(self): #Returns links to versions that have server jar availablke to be downloaded
         rawLinks = self.listStableLinkRaw()
         links = list()
         for i in rawLinks:
@@ -59,7 +62,7 @@ class ServerDownloader():
                 links.append(self.INDEX_HREF + i)
         return links
 
-    def listSnapshotLink(self):
+    def listSnapshotLink(self): #Returns links to versions that have server jar availablke to be downloaded
         rawLinks = self.listSnapshotLinkRaw()
         links = list()
         for i in rawLinks:
@@ -67,7 +70,7 @@ class ServerDownloader():
                 links.append(self.INDEX_HREF + i)
         return links
 
-    def validateURL(self, href):
+    def validateURL(self, href): #Validates URL
         try: page = requests.get(href)
         except:
             return False
@@ -76,13 +79,13 @@ class ServerDownloader():
         else:
             return False
 
-    def validatePath(self, path):
+    def validatePath(self, path): #Validates path
         if os.path.exists(path):
             return True
         else:
             return False
 
-    def validateOrExit(self, validator, message):
+    def validateOrExit(self, validator, message): # Passes gioven validator or exits the programm
         if not validator:
             print(message)
             exit()
