@@ -2,14 +2,18 @@ import os
 import requests
 import wget
 from bs4 import BeautifulSoup
+import re
 
 class ServerDownloader():
     VERSION = "Release 1.0"
     INDEX_HREF = "https://mcversions.net"
     BASE_HREF = "https://mcversions.net/download/"
+    REGEX_REMOVE_TO_SLASH = "^(.*[\\\/])"
 
-    stableVersions = list()
-    snapshotVersions = list()
+    stableVersion = list()
+    stableVersionLink = list()
+    snapshotVersion = list()
+    snapshotVersionLink = list()
 
     def getDownloadHref(self, href): # gets file download link from web page
         try:
@@ -69,6 +73,17 @@ class ServerDownloader():
             if self.getDownloadHref(self.INDEX_HREF + i) != None:
                 links.append(self.INDEX_HREF + i)
         return links
+
+    def update(self):
+        self.stableVersionLink = self.listStableLink()
+        self.snapshotVersionLink = self.listSnapshotLink()
+        for i in self.stableVersionLink:
+            self.stableVersion.append(self.removeToLastSlash(i))
+        for i in self.snapshotVersionLink:
+            self.snapshotVersion.append(self.removeToLastSlash(i))
+
+    def removeToLastSlash(self, string):
+        return re.sub(self.REGEX_REMOVE_TO_SLASH, "", string)
 
     def validateURL(self, href): #Validates URL
         try: page = requests.get(href)
