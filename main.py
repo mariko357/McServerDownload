@@ -3,18 +3,21 @@ import requests
 from bs4 import BeautifulSoup
 import argparse
 import os
-import re
+
 
 VERSION = "Release 1.0"
 INDEX_HREF = "https://mcversions.net"
 BASE_HREF = "https://mcversions.net/download/"
 
 def getDownloadHref(href):
-    page = requests.get(href)
-    soupObj = BeautifulSoup(page.content, "html.parser")
-    res = soupObj.find("a", string = "Download Server Jar")
-    href = res.get("href")
-    return href
+    try:
+        page = requests.get(href)
+        soupObj = BeautifulSoup(page.content, "html.parser")
+        res = soupObj.find("a", string = "Download Server Jar")
+        href = res.get("href")
+        return href
+    except:
+        return None
 
 def getLatestDownloadHref():
     page = requests.get(INDEX_HREF)
@@ -27,6 +30,27 @@ def getLatestDownloadHref():
     completeHref = INDEX_HREF + href
     return completeHref
 
+def listStable():
+    page = requests.get(INDEX_HREF)
+    soupObj = BeautifulSoup(page.content, "html.parser")
+    stable = soupObj.find("h5", text = "Stable Releases")
+    stableDiv = stable.parent
+    elements = stableDiv.find_all("a", string = "Download")
+    links = list()
+    for i in elements:
+        links.append(i.get("href"))
+    return links
+
+def listSnapshot():
+    page = requests.get(INDEX_HREF)
+    soupObj = BeautifulSoup(page.content, "html.parser")
+    snapshot = soupObj.find("h5", text = "Snapshot Preview")
+    snapshotDiv = snapshot.parent
+    elements = snapshotDiv.find_all("a", string = "Download")
+    links = list()
+    for i in elements:
+        links.append(i.get("href"))
+    return links
 
 def validateURL(href):
     try: page = requests.get(href)
@@ -96,5 +120,12 @@ if __name__ == "__main__":
             wget.download(downHref, bar = bar)
         
     else:
-        print("No arguments provided! Exiting without action!")
-    
+        print("No arguments provided! Exiting without action")
+    """links = listSnapshot()
+    total = len(links)
+    j = 0
+    for i in links:
+        j += 1
+        print(f"{j} Out Of {total}; ", end=" ")
+        print(i.removeprefix("/download/"), end = ": ")
+        print(getDownloadHref(INDEX_HREF + i))"""
