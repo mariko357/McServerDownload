@@ -19,25 +19,25 @@ class ServerDownloader():
     snapshotVersion = list()
     snapshotVersionLink = list()
 
-    async def getPageContents(url): #Non blocking function to get contents of the web page
+    async def getPageContents(self, url): #Non blocking function to get contents of the web page
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 text = await resp.read()
         return text
 
-    def getDownloadHref(self, href): # gets file download link from web page
+    async def getDownloadHref(self, url): # gets file download link from link to web page (non blocking)
         try:
-            page = requests.get(href)
-            soupObj = BeautifulSoup(page.content, "html.parser")
+            page = await self.getPageContents(url)
+            soupObj = BeautifulSoup(page, "html.parser")
             res = soupObj.find("a", string = "Download Server Jar")
             href = res.get("href")
             return href
         except:
             return None
 
-    def getLatestDownloadHref(self): #gets latest version page
-        page = requests.get(self.INDEX_HREF)
-        soupObj = BeautifulSoup(page.content, "html.parser")
+    async def getLatestDownloadHref(self): #gets latest version page
+        page = await self.getPageContents(self.INDEX_HREF)
+        soupObj = BeautifulSoup(page, "html.parser")
         res = soupObj.find("span", text = "Latest Release")
         res = res.parent.parent
         soupObj = BeautifulSoup(str(res), "html.parser")
@@ -47,8 +47,8 @@ class ServerDownloader():
         return completeHref
 
     async def listStableLinkRaw(self): #gets all links to stable releases pages
-        page = requests.get(self.INDEX_HREF)
-        soupObj = BeautifulSoup(page.content, "html.parser")
+        page = await self.getPageContents(self.INDEX_HREF)
+        soupObj = BeautifulSoup(page, "html.parser")
         stable = soupObj.find("h5", text = "Stable Releases")
         stableDiv = stable.parent
         elements = stableDiv.find_all("a", string = "Download")
@@ -58,8 +58,8 @@ class ServerDownloader():
         return links
 
     async def listSnapshotLinkRaw(self): #Gets all links to snapshot version pages
-        page = requests.get(self.INDEX_HREF)
-        soupObj = BeautifulSoup(page.content, "html.parser")
+        page = await self.getPageContents(self.INDEX_HREF)
+        soupObj = BeautifulSoup(page, "html.parser")
         snapshot = soupObj.find("h5", text = "Snapshot Preview")
         snapshotDiv = snapshot.parent
         elements = snapshotDiv.find_all("a", string = "Download")
@@ -67,23 +67,21 @@ class ServerDownloader():
         for i in elements:
             links.append(i.get("href"))
         return links
+    
+    async def checkDownloadable(self, linkToCheck, linksPointer):
+        if await self.getDownloadHref(self.INDEX_HREF + linkToCheck) != None:
+                linksPointer.append(self.INDEX_HREF + linkToCheck)
 
-    async def listStableLink(self): #Returns links to versions that have server jar availablke to be downloaded
+    async def listStableLink(self): #Returns links to versions pages that have server jar available to be downloaded
         rawLinks = await self.listStableLinkRaw()
         links = list()
-        for i in rawLinks:
-            await asyncio.sleep(0)
-            if self.getDownloadHref(self.INDEX_HREF + i) != None:
-                links.append(self.INDEX_HREF + i)
+        await asyncio.gather(*(self.checkDownloadable(i, links) for i in rawLinks))
         return links
 
-    async def listSnapshotLink(self): #Returns links to versions that have server jar availablke to be downloaded
+    async def listSnapshotLink(self): #Returns links to versions pages that have server jar available to be downloaded
         rawLinks = await self.listSnapshotLinkRaw()
         links = list()
-        for i in rawLinks:
-            await asyncio.sleep(0)
-            if self.getDownloadHref(self.INDEX_HREF + i) != None:
-                links.append(self.INDEX_HREF + i)
+        await asyncio.gather(*(self.checkDownloadable(i, links) for i in rawLinks))
         return links
 
     async def update(self):
