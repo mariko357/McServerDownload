@@ -1,19 +1,29 @@
+import asyncio
 import os
 import requests
 import wget
 from bs4 import BeautifulSoup
 import re
+import asyncio
+import aiohttp
 
 class ServerDownloader():
     VERSION = "Release 1.0"
     INDEX_HREF = "https://mcversions.net"
     BASE_HREF = "https://mcversions.net/download/"
     REGEX_REMOVE_TO_SLASH = "^(.*[\\\/])"
+    BAR = None
 
     stableVersion = list()
     stableVersionLink = list()
     snapshotVersion = list()
     snapshotVersionLink = list()
+
+    async def getPageContents(url): #Non blocking function to get contents of the web page
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                text = await resp.read()
+        return text
 
     def getDownloadHref(self, href): # gets file download link from web page
         try:
@@ -36,7 +46,7 @@ class ServerDownloader():
         completeHref = self.INDEX_HREF + href
         return completeHref
 
-    def listStableLinkRaw(self): #gets all links to stable releases pages
+    async def listStableLinkRaw(self): #gets all links to stable releases pages
         page = requests.get(self.INDEX_HREF)
         soupObj = BeautifulSoup(page.content, "html.parser")
         stable = soupObj.find("h5", text = "Stable Releases")
@@ -47,7 +57,7 @@ class ServerDownloader():
             links.append(i.get("href"))
         return links
 
-    def listSnapshotLinkRaw(self): #Gets all links to snapshot version pages
+    async def listSnapshotLinkRaw(self): #Gets all links to snapshot version pages
         page = requests.get(self.INDEX_HREF)
         soupObj = BeautifulSoup(page.content, "html.parser")
         snapshot = soupObj.find("h5", text = "Snapshot Preview")
@@ -58,25 +68,27 @@ class ServerDownloader():
             links.append(i.get("href"))
         return links
 
-    def listStableLink(self): #Returns links to versions that have server jar availablke to be downloaded
-        rawLinks = self.listStableLinkRaw()
+    async def listStableLink(self): #Returns links to versions that have server jar availablke to be downloaded
+        rawLinks = await self.listStableLinkRaw()
         links = list()
         for i in rawLinks:
+            await asyncio.sleep(0)
             if self.getDownloadHref(self.INDEX_HREF + i) != None:
                 links.append(self.INDEX_HREF + i)
         return links
 
-    def listSnapshotLink(self): #Returns links to versions that have server jar availablke to be downloaded
-        rawLinks = self.listSnapshotLinkRaw()
+    async def listSnapshotLink(self): #Returns links to versions that have server jar availablke to be downloaded
+        rawLinks = await self.listSnapshotLinkRaw()
         links = list()
         for i in rawLinks:
+            await asyncio.sleep(0)
             if self.getDownloadHref(self.INDEX_HREF + i) != None:
                 links.append(self.INDEX_HREF + i)
         return links
 
-    def update(self):
-        self.stableVersionLink = self.listStableLink()
-        self.snapshotVersionLink = self.listSnapshotLink()
+    async def update(self):
+        self.stableVersionLink = await self.listStableLink()
+        self.snapshotVersionLink = await self.listSnapshotLink()
         for i in self.stableVersionLink:
             self.stableVersion.append(self.removeToLastSlash(i))
         for i in self.snapshotVersionLink:
@@ -84,6 +96,12 @@ class ServerDownloader():
 
     def removeToLastSlash(self, string):
         return re.sub(self.REGEX_REMOVE_TO_SLASH, "", string)
+
+    def getStableLinkByVersion(self, version):
+        return self.stableVersionLink[self.stableVersion.index(version)]
+
+    def getSnapshotLinkByVersion(self, version):
+        return self.snapshotVersionLink[self.snapshotVersion.index(version)]
 
     def validateURL(self, href): #Validates URL
         try: page = requests.get(href)
