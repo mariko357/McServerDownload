@@ -1,12 +1,10 @@
 from ServerDownloader.DownSrv import ServerDownloader
 import wget
 import asyncio
-async def main():
-    await inst.update()
 
 if __name__ == "__main__":
     inst = ServerDownloader()
-    asyncio.run(main())
+    inst.update()
     j = 0
     for i in inst.snapshotVersion:
         print(inst.getSnapshotLinkByVersion(i), end=": ")

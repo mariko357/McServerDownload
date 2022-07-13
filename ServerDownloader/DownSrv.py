@@ -84,13 +84,16 @@ class ServerDownloader():
         await asyncio.gather(*(self.checkDownloadable(i, links) for i in rawLinks))
         return links
 
-    async def update(self):
+    async def asyncUpdate(self):
         self.stableVersionLink = await self.listStableLink()
         self.snapshotVersionLink = await self.listSnapshotLink()
         for i in self.stableVersionLink:
             self.stableVersion.append(self.removeToLastSlash(i))
         for i in self.snapshotVersionLink:
             self.snapshotVersion.append(self.removeToLastSlash(i))
+    
+    def update(self):
+        asyncio.run(self.asyncUpdate())
 
     def removeToLastSlash(self, string):
         return re.sub(self.REGEX_REMOVE_TO_SLASH, "", string)
