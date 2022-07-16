@@ -8,4 +8,5 @@ if __name__ == "__main__":
     for i in inst.snapshotVersion:
         print(i, j)
         j += 1
+    inst.downloadSnapshotServer(inst.stableVersion[5])
     j = 0

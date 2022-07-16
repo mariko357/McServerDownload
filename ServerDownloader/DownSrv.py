@@ -112,11 +112,17 @@ class ServerDownloader():
     def getSnapshotLinkByVersion(self, version): #gets link to the version page
         return self.snapshotVersionLink[self.snapshotVersion.index(version)]
 
-    def getStableLinkByVersion(self, version): #gets link to the downlaod link by version
+    def getStableDownloadLinkByVersion(self, version): #gets link to the downlaod link by version
         return self.stableVersionDownloadLink[self.stableVersion.index(version)]
 
-    def getSnapshotLinkByVersion(self, version): #gets link to the downlaod link by version
+    def getSnapshotDownloadLinkByVersion(self, version): #gets link to the downlaod link by version
         return self.snapshotVersionDownloadLink[self.snapshotVersion.index(version)]
+
+    def downloadStableServer(self, version, path=DOWNLOAD_LOCATION): #downloads server .jar file by version (stable)
+        wget.download(self.getStableDownloadLinkByVersion(version), f"{path}{version}.jar", bar=self.BAR)
+    
+    def downloadSnapshotServer(self, version, path=DOWNLOAD_LOCATION): #downloads server.jar file by version (snapshot)
+        wget.download(self.getSnapshotDownloadLinkByVersion(version), f"{path}{version}.jar", bar=self.BAR)
 
     def validateURL(self, href): #Validates URL
         try: page = requests.get(href)
