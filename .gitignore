@@ -1,1 +1,8 @@
+/ServerDownloader/__pycache__
+/lib64
+/lib
+/include
 /cache
+/bin
+download.wget
+pyvenv.cfg
