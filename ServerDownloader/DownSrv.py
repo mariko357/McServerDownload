@@ -23,6 +23,9 @@ class ServerDownloader():
     snapshotVersionLink = list()
     snapshotVersionDownloadLink = list()
 
+    def __init__(self) -> None:
+        self.update()
+
     async def getPageContents(self, url): #Non blocking function to get contents of the web page
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
@@ -119,10 +122,26 @@ class ServerDownloader():
         return self.snapshotVersionDownloadLink[self.snapshotVersion.index(version)]
 
     def downloadStableServer(self, version, path=DOWNLOAD_LOCATION): #downloads server .jar file by version (stable)
+        self.deleteIfDownloaded(version, path)
         wget.download(self.getStableDownloadLinkByVersion(version), f"{path}{version}.jar", bar=self.BAR)
     
-    def downloadSnapshotServer(self, version, path=DOWNLOAD_LOCATION): #downloads server.jar file by version (snapshot)
+    def downloadSnapshotServer(self, version, path = DOWNLOAD_LOCATION): #downloads server.jar file by version (snapshot)
+        self.deleteIfDownloaded(version, path)
         wget.download(self.getSnapshotDownloadLinkByVersion(version), f"{path}{version}.jar", bar=self.BAR)
+
+    def downloadServer(self, version, path = DOWNLOAD_LOCATION): #downloads server only by its version (version must be in the list)
+        if version in self.stableVersion:
+            self.downloadStableServer(version, path)
+        elif version in self.snapshotVersion:
+            self.downloadSnapshotServer(version, path)
+
+    def isDownloaded(self, version, path = DOWNLOAD_LOCATION): #checks whether file is downloaded
+        return os.path.exists(f"{path}{version}.jar")
+    
+    def deleteIfDownloaded(self, version, path = DOWNLOAD_LOCATION):
+        if self.isDownloaded(version, path):
+            os.remove(f"{path}{version}.jar")
+
 
     def validateURL(self, href): #Validates URL
         try: page = requests.get(href)
