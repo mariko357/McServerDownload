@@ -13,6 +13,7 @@ class ServerDownloader():
     BASE_HREF = "https://mcversions.net/download/"
     REGEX_REMOVE_TO_SLASH = "^(.*[\\\/])"
     BAR = None
+    DOWNLOAD_LOCATION = ""
 
     stableVersion = list()
     stableVersionLink = list()
@@ -105,11 +106,17 @@ class ServerDownloader():
     def removeToLastSlash(self, string):
         return re.sub(self.REGEX_REMOVE_TO_SLASH, "", string)
 
-    def getStableLinkByVersion(self, version):
+    def getStableLinkByVersion(self, version): #gets link to the version page
         return self.stableVersionLink[self.stableVersion.index(version)]
 
-    def getSnapshotLinkByVersion(self, version):
+    def getSnapshotLinkByVersion(self, version): #gets link to the version page
         return self.snapshotVersionLink[self.snapshotVersion.index(version)]
+
+    def getStableLinkByVersion(self, version): #gets link to the downlaod link by version
+        return self.stableVersionDownloadLink[self.stableVersion.index(version)]
+
+    def getSnapshotLinkByVersion(self, version): #gets link to the downlaod link by version
+        return self.snapshotVersionDownloadLink[self.snapshotVersion.index(version)]
 
     def validateURL(self, href): #Validates URL
         try: page = requests.get(href)
