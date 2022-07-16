@@ -16,8 +16,11 @@ class ServerDownloader():
 
     stableVersion = list()
     stableVersionLink = list()
+    stableVersionDownloadLink = list()
+
     snapshotVersion = list()
     snapshotVersionLink = list()
+    snapshotVersionDownloadLink = list()
 
     async def getPageContents(self, url): #Non blocking function to get contents of the web page
         async with aiohttp.ClientSession() as session:
@@ -68,25 +71,29 @@ class ServerDownloader():
             links.append(i.get("href"))
         return links
     
-    async def checkDownloadable(self, linkToCheck, linksPointer):
-        if await self.getDownloadHref(self.INDEX_HREF + linkToCheck) != None:
+    async def checkDownloadable(self, linkToCheck, linksPointer, downLinksPointer):
+        downLink = await self.getDownloadHref(self.INDEX_HREF + linkToCheck)
+        if downLink != None:
                 linksPointer.append(self.INDEX_HREF + linkToCheck)
+                downLinksPointer.append(downLink)
 
     async def listStableLink(self): #Returns links to versions pages that have server jar available to be downloaded
         rawLinks = await self.listStableLinkRaw()
         links = list()
-        await asyncio.gather(*(self.checkDownloadable(i, links) for i in rawLinks))
-        return links
+        downLinks = list()
+        await asyncio.gather(*(self.checkDownloadable(i, links, downLinks) for i in rawLinks))
+        return links, downLinks
 
     async def listSnapshotLink(self): #Returns links to versions pages that have server jar available to be downloaded
         rawLinks = await self.listSnapshotLinkRaw()
         links = list()
-        await asyncio.gather(*(self.checkDownloadable(i, links) for i in rawLinks))
-        return links
+        downLinks = list()
+        await asyncio.gather(*(self.checkDownloadable(i, links, downLinks) for i in rawLinks))
+        return links, downLinks
 
-    async def asyncUpdate(self):
-        self.stableVersionLink = await self.listStableLink()
-        self.snapshotVersionLink = await self.listSnapshotLink()
+    async def asyncUpdate(self): #updates version list, links to version pages, links to downloads
+        self.stableVersionLink, self.stableVersionDownloadLink = await self.listStableLink()
+        self.snapshotVersionLink, self.snapshotVersionDownloadLink = await self.listSnapshotLink()
         for i in self.stableVersionLink:
             self.stableVersion.append(self.removeToLastSlash(i))
         for i in self.snapshotVersionLink:
