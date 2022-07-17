@@ -1,5 +1,5 @@
 ServerDownloader/__pycache__/
-lib64/
+lib64
 lib/
 include/
 cache/
