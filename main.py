@@ -8,3 +8,4 @@ if __name__ == "__main__":
         inst.downloadServer(i)
         print(i)
         j += 1
+
