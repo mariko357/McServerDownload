@@ -10,7 +10,7 @@ import aiohttp
 class ServerDownloader():
     VERSION = "Release 1.0"
     INDEX_HREF = "https://mcversions.net"
-    BASE_HREF = "https://mcversions.net/download/"
+    BASE_DOWNLOAD_HREF = "https://mcversions.net/download/"
     REGEX_REMOVE_TO_SLASH = "^(.*[\\\/])"
     BAR = None
     DOWNLOAD_LOCATION = ""
@@ -23,17 +23,17 @@ class ServerDownloader():
     snapshotVersionLink = list()
     snapshotVersionDownloadLink = list()
 
-    def __init__(self, location) -> None:
+    def __init__(self, location = "") -> None:
         self.update()
         self.DOWNLOAD_LOCATION = location
 
-    async def getPageContents(self, url): #Non blocking function to get contents of the web page
+    async def getPageContents(self, url) -> str: #Non blocking function to get contents of the web page
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 text = await resp.read()
         return text
 
-    async def getDownloadHref(self, url): # gets file download link from link to web page (non blocking)
+    async def getDownloadHref(self, url) -> str: # gets file download link from link to web page (non blocking)
         try:
             page = await self.getPageContents(url)
             soupObj = BeautifulSoup(page, "html.parser")
@@ -43,7 +43,7 @@ class ServerDownloader():
         except:
             return None
 
-    async def getLatestDownloadHref(self): #gets latest version page
+    async def getLatestDownloadHref(self) -> str: #gets latest version page
         page = await self.getPageContents(self.INDEX_HREF)
         soupObj = BeautifulSoup(page, "html.parser")
         res = soupObj.find("span", text = "Latest Release")
@@ -54,7 +54,7 @@ class ServerDownloader():
         completeHref = self.INDEX_HREF + href
         return completeHref
 
-    async def listStableLinkRaw(self): #gets all links to stable releases pages
+    async def listStableLinkRaw(self) -> list: #gets all links to stable releases pages
         page = await self.getPageContents(self.INDEX_HREF)
         soupObj = BeautifulSoup(page, "html.parser")
         stable = soupObj.find("h5", text = "Stable Releases")
@@ -65,7 +65,7 @@ class ServerDownloader():
             links.append(i.get("href"))
         return links
 
-    async def listSnapshotLinkRaw(self): #Gets all links to snapshot version pages
+    async def listSnapshotLinkRaw(self) -> list: #Gets all links to snapshot version pages
         page = await self.getPageContents(self.INDEX_HREF)
         soupObj = BeautifulSoup(page, "html.parser")
         snapshot = soupObj.find("h5", text = "Snapshot Preview")
@@ -76,27 +76,27 @@ class ServerDownloader():
             links.append(i.get("href"))
         return links
     
-    async def checkDownloadable(self, linkToCheck, linksPointer, downLinksPointer):
+    async def checkDownloadable(self, linkToCheck, linksPointer, downLinksPointer) -> None: #checks whether page contains server jar download link
         downLink = await self.getDownloadHref(self.INDEX_HREF + linkToCheck)
         if downLink != None:
                 linksPointer.append(self.INDEX_HREF + linkToCheck)
                 downLinksPointer.append(downLink)
 
-    async def listStableLink(self): #Returns links to versions pages that have server jar available to be downloaded
+    async def listStableLink(self) -> list: #Returns links to versions pages that have server jar available to be downloaded
         rawLinks = await self.listStableLinkRaw()
         links = list()
         downLinks = list()
         await asyncio.gather(*(self.checkDownloadable(i, links, downLinks) for i in rawLinks))
         return links, downLinks
 
-    async def listSnapshotLink(self): #Returns links to versions pages that have server jar available to be downloaded
+    async def listSnapshotLink(self) -> list: #Returns links to versions pages that have server jar available to be downloaded
         rawLinks = await self.listSnapshotLinkRaw()
         links = list()
         downLinks = list()
         await asyncio.gather(*(self.checkDownloadable(i, links, downLinks) for i in rawLinks))
         return links, downLinks
 
-    async def asyncUpdate(self): #updates version list, links to version pages, links to downloads
+    async def asyncUpdate(self) -> None: #updates version list, links to version pages, links to downloads
         self.stableVersionLink, self.stableVersionDownloadLink = await self.listStableLink()
         self.snapshotVersionLink, self.snapshotVersionDownloadLink = await self.listSnapshotLink()
         for i in self.stableVersionLink:
@@ -104,30 +104,30 @@ class ServerDownloader():
         for i in self.snapshotVersionLink:
             self.snapshotVersion.append(self.removeToLastSlash(i))
     
-    def update(self):
+    def update(self) -> None:
         asyncio.run(self.asyncUpdate())
 
-    def removeToLastSlash(self, string):
+    def removeToLastSlash(self, string) -> str:
         return re.sub(self.REGEX_REMOVE_TO_SLASH, "", string)
 
-    def getStableLinkByVersion(self, version): #gets link to the version page
+    def getStableLinkByVersion(self, version) -> str: #gets link to the version page
         return self.stableVersionLink[self.stableVersion.index(version)]
 
-    def getSnapshotLinkByVersion(self, version): #gets link to the version page
+    def getSnapshotLinkByVersion(self, version) -> str: #gets link to the version page
         return self.snapshotVersionLink[self.snapshotVersion.index(version)]
 
-    def getStableDownloadLinkByVersion(self, version): #gets link to the downlaod link by version
+    def getStableDownloadLinkByVersion(self, version) -> str: #gets link to the downlaod link by version
         return self.stableVersionDownloadLink[self.stableVersion.index(version)]
 
-    def getSnapshotDownloadLinkByVersion(self, version): #gets link to the downlaod link by version
+    def getSnapshotDownloadLinkByVersion(self, version) -> str: #gets link to the downlaod link by version
         return self.snapshotVersionDownloadLink[self.snapshotVersion.index(version)]
 
-    def downloadStableServer(self, version, path = ""): #downloads server .jar file by version (stable)
+    def downloadStableServer(self, version, path = "") -> None: #downloads server .jar file by version (stable)
         path = self.DOWNLOAD_LOCATION
         self.deleteIfDownloaded(version, path)
         wget.download(self.getStableDownloadLinkByVersion(version), f"{path}{version}.jar", bar=self.BAR)
     
-    def downloadSnapshotServer(self, version, path = ""): #downloads server.jar file by version (snapshot)
+    def downloadSnapshotServer(self, version, path = "") -> None: #downloads server.jar file by version (snapshot)
         path = self.DOWNLOAD_LOCATION
         self.deleteIfDownloaded(version, path)
         wget.download(self.getSnapshotDownloadLinkByVersion(version), f"{path}{version}.jar", bar=self.BAR)
@@ -139,17 +139,17 @@ class ServerDownloader():
         elif version in self.snapshotVersion:
             self.downloadSnapshotServer(version, path)
 
-    def isDownloaded(self, version, path = ""): #checks whether file is downloaded
+    def isDownloaded(self, version, path = "") -> bool: #checks whether file is downloaded
         path = self.DOWNLOAD_LOCATION
         return os.path.exists(f"{path}{version}.jar")
     
-    def deleteIfDownloaded(self, version, path = ""):
+    def deleteIfDownloaded(self, version, path = "") -> None:
         path = self.DOWNLOAD_LOCATION
         if self.isDownloaded(version, path):
             os.remove(f"{path}{version}.jar")
 
 
-    def validateURL(self, href): #Validates URL
+    def validateURL(self, href) -> bool: #Validates URL
         try: page = requests.get(href)
         except:
             return False
@@ -158,13 +158,13 @@ class ServerDownloader():
         else:
             return False
 
-    def validatePath(self, path): #Validates path
+    def validatePath(self, path) -> bool: #Validates path
         if os.path.exists(path):
             return True
         else:
             return False
 
-    def validateOrExit(self, validator, message): # Passes gioven validator or exits the programm
+    def validateOrExit(self, validator, message) -> None: # Passes gioven validator or exits the programm
         if not validator:
             print(message)
             exit()
