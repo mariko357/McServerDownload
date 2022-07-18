@@ -111,16 +111,43 @@ class ServerDownloader():
         return re.sub(self.REGEX_REMOVE_TO_SLASH, "", string)
 
     def getStableLinkByVersion(self, version) -> str: #gets link to the version page
-        return self.stableVersionLink[self.stableVersion.index(version)]
-
+        try:
+            return self.stableVersionLink[self.stableVersion.index(version)]
+        except:
+            return ""
     def getSnapshotLinkByVersion(self, version) -> str: #gets link to the version page
-        return self.snapshotVersionLink[self.snapshotVersion.index(version)]
+        try:
+            return self.snapshotVersionLink[self.snapshotVersion.index(version)]
+        except:
+            return ""
+
+    def getLinkByVersion(self, version):
+        if version in self.stableVersion:
+            return self.getStableLinkByVersion(version)
+        elif version in self.snapshotVersion:
+            return self.getSnapshotLinkByVersion(version)
+        else:
+            return ""
 
     def getStableDownloadLinkByVersion(self, version) -> str: #gets link to the downlaod link by version
-        return self.stableVersionDownloadLink[self.stableVersion.index(version)]
+        try:
+            return self.stableVersionDownloadLink[self.stableVersion.index(version)]
+        except:
+            return ""
 
     def getSnapshotDownloadLinkByVersion(self, version) -> str: #gets link to the downlaod link by version
-        return self.snapshotVersionDownloadLink[self.snapshotVersion.index(version)]
+        try:
+            return self.snapshotVersionDownloadLink[self.snapshotVersion.index(version)]
+        except:
+            return ""
+
+    def getDownloadLinkByVersion(self, version):
+        if version in self.stableVersion:
+            return self.getStableDownloadLinkByVersion(version)
+        elif version in self.snapshotVersion:
+            return self.getSnapshotDownloadLinkByVersion(version)
+        else:
+            return ""
 
     def downloadStableServer(self, version, path = "") -> None: #downloads server .jar file by version (stable)
         path = self.DOWNLOAD_LOCATION
