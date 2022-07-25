@@ -4,7 +4,6 @@ import requests
 import wget
 from bs4 import BeautifulSoup
 import re
-import asyncio
 import aiohttp
 
 class ServerDownloader():

@@ -1,5 +1,4 @@
 from ServerDownloader.DownSrv import ServerDownloader
-import time
 
 if __name__ == "__main__":
     inst = ServerDownloader("cache/")
