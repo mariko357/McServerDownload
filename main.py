@@ -1,4 +1,4 @@
-from ServerDownloader.DownSrv import ServerDownloader
+from ServerDownloader.dsrv import ServerDownloader
 
 if __name__ == "__main__":
     inst = ServerDownloader("cache/")
