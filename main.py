@@ -1,9 +1,9 @@
-import ServerDownloader.dsrv
+import ServerDownloader.dsrv as dsrv
 
 if __name__ == "__main__":
-    inst = ServerDownloader("cache/")
+    inst = dsrv.init("cache/")
     j = 0
-    for i in inst.stableVersion:
-        print(inst.getDownloadLinkByVersion(i))
+    for i in dsrv.snapshotVersion:
+        print(dsrv.getDownloadLinkByVersion(i))
         j += 1
 
